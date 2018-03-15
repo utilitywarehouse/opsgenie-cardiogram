@@ -13,7 +13,6 @@ import (
 )
 
 type config struct {
-	URL      string        `yaml:"url"`
 	APIKey   string        `yaml:"api_key"`
 	Timeout  time.Duration `yaml:"timeout"`
 	Interval time.Duration `yaml:"interval"`
@@ -51,7 +50,6 @@ func main() {
 		Client: &http.Client{
 			Timeout: c.Timeout,
 		},
-		URL:    c.URL,
 		APIKey: c.APIKey,
 	}
 

@@ -12,7 +12,6 @@ import (
 type Heartbeat struct {
 	Client  *http.Client
 	Timeout time.Duration
-	URL     string
 	APIKey  string
 }
 
