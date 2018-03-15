@@ -1,8 +1,7 @@
 package cardiogram
 
 import (
-	"bytes"
-	"encoding/json"
+	"fmt"
 	"errors"
 	"log"
 	"net/http"
@@ -38,34 +37,19 @@ func (h *Heartbeat) call(url string, expected int) error {
 }
 
 func (h *Heartbeat) send(name string) {
-	req := struct {
-		APIKey string `json:"apiKey"`
-		Name   string `json:"name"`
-	}{h.APIKey, name}
+	url := fmt.Sprintf("https://api.opsgenie.com/v2/heartbeats/%s/ping", name)
+	apiKey := fmt.Sprintf("GenieKey %s", h.APIKey)
+        req, _ := http.NewRequest("GET", url , nil)
+	req.Header.Set("Authorization", apiKey)
 
-	buf, err := json.Marshal(req)
-	if err != nil {
-		log.Println("Cannot marshal request json")
-		return
-	}
+	res, err := h.Client.Do(req)
 
-	res, err := h.Client.Post(h.URL, "application/json", bytes.NewReader(buf))
 	if err != nil {
 		log.Printf("Error while sending Heartbeat for '%s': %s", name, err)
 	}
 	defer res.Body.Close()
 
-	resp := struct {
-		Status string
-		Code   int
-	}{}
-
-	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
-		log.Println("Cannot read response from Opsgenie")
-		return
-	}
-
-	if resp.Code != 200 || resp.Status != "successful" {
+	if res.StatusCode != 202 {
 		log.Println("Sending Heartbeat was not successful")
 	}
 }

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lovoo/opsgenie-cardiogram/cardiogram"
+	"github.com/utilitywarehouse/opsgenie-cardiogram/cardiogram"
 
 	"gopkg.in/yaml.v2"
 )
