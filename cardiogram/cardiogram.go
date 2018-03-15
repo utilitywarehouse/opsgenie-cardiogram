@@ -1,8 +1,8 @@
 package cardiogram
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -37,16 +37,24 @@ func (h *Heartbeat) call(url string, expected int) error {
 
 func (h *Heartbeat) send(name string) {
 	url := fmt.Sprintf("https://api.opsgenie.com/v2/heartbeats/%s/ping", name)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Printf("Error creating request: %s", err)
+	}
+
 	apiKey := fmt.Sprintf("GenieKey %s", h.APIKey)
-        req, _ := http.NewRequest("GET", url , nil)
 	req.Header.Set("Authorization", apiKey)
 
 	res, err := h.Client.Do(req)
-
 	if err != nil {
 		log.Printf("Error while sending Heartbeat for '%s': %s", name, err)
 	}
-	defer res.Body.Close()
+
+	defer func() {
+		io.Copy(ioutil.Discard, res.Body)
+		res.Body.Close()
+	}()
 
 	if res.StatusCode != 202 {
 		log.Println("Sending Heartbeat was not successful")
