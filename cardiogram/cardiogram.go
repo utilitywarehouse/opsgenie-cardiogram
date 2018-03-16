@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"io"
+	"io/ioutil"
 	"time"
 )
 
@@ -38,7 +40,7 @@ func (h *Heartbeat) call(url string, expected int) error {
 func (h *Heartbeat) send(name string) {
 	url := fmt.Sprintf("https://api.opsgenie.com/v2/heartbeats/%s/ping", name)
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		log.Printf("Error creating request: %s", err)
 	}
@@ -57,6 +59,10 @@ func (h *Heartbeat) send(name string) {
 	}()
 
 	if res.StatusCode != 202 {
-		log.Println("Sending Heartbeat was not successful")
+		reply, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			log.Printf("Error reading body: %s", err)
+		}
+		log.Println("Sending Heartbeat to opsgenie was not successful: " + string(reply))
 	}
 }
