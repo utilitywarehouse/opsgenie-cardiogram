@@ -3,10 +3,10 @@ package cardiogram
 import (
 	"errors"
 	"fmt"
-	"log"
-	"net/http"
 	"io"
 	"io/ioutil"
+	"log"
+	"net/http"
 	"time"
 )
 
@@ -43,6 +43,7 @@ func (h *Heartbeat) send(name string) {
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		log.Printf("Error creating request: %s", err)
+		return
 	}
 
 	apiKey := fmt.Sprintf("GenieKey %s", h.APIKey)
@@ -62,6 +63,7 @@ func (h *Heartbeat) send(name string) {
 		reply, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			log.Printf("Error reading body: %s", err)
+			return
 		}
 		log.Println("Sending Heartbeat to opsgenie was not successful: " + string(reply))
 	}
