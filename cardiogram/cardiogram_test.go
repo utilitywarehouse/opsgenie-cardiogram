@@ -1,12 +1,9 @@
 package cardiogram
 
 import (
-	"bytes"
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 )
@@ -24,51 +21,27 @@ func TestSend(t *testing.T) {
 		APIKey: "1234",
 	}
 	t.Run("Invalid URL", func(t *testing.T) {
-		var buf bytes.Buffer
-		log.SetOutput(&buf)
-		defer func() {
-			log.SetOutput(os.Stderr)
-		}()
-
-		h.send("http://example.com/%%%%")
-		log := buf.String()
-		if !strings.Contains(log, "Error creating request") {
+		err := h.send("http://example.com/%%%%")
+		if !strings.Contains(err.Error(), "Error creating request") {
 			t.Error("Invalid URL not detected")
 		}
 	})
 	t.Run("Hearbeat not successful", func(t *testing.T) {
-		var buf bytes.Buffer
-		log.SetOutput(&buf)
-		defer func() {
-			log.SetOutput(os.Stderr)
-		}()
-
 		errMsg := "Reply error message"
 		server := mockServer(400, errMsg)
 		defer server.Close()
 
-		h.send(server.URL)
-		log := buf.String()
-		if !strings.Contains(log, "Opsgenie reply to Heartbeat not successful") {
-			t.Fail()
-		}
-		if !strings.Contains(log, errMsg) {
+		err := h.send(server.URL)
+		if !strings.Contains(err.Error(), "Opsgenie reply to Heartbeat not successful") ||
+			!strings.Contains(err.Error(), errMsg) {
 			t.Fail()
 		}
 	})
 	t.Run("Hearbeat successful", func(t *testing.T) {
-		var buf bytes.Buffer
-		log.SetOutput(&buf)
-		defer func() {
-			log.SetOutput(os.Stderr)
-		}()
-
 		server := mockServer(202, "")
 		defer server.Close()
-
-		h.send(server.URL)
-		log := buf.String()
-		if strings.Contains(log, "Opsgenie reply to Heartbeat not successful") {
+		err := h.send(server.URL)
+		if err != nil {
 			t.Fail()
 		}
 	})

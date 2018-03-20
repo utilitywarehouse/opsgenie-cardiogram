@@ -21,7 +21,10 @@ type Heartbeat struct {
 func (h *Heartbeat) Check(url string, expected int, name string) {
 	if h.call(url, expected) == nil {
 		APIUrl := fmt.Sprintf("https://api.opsgenie.com/v2/heartbeats/%s/ping", name)
-		h.send(APIUrl)
+		err := h.send(APIUrl)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 
@@ -38,11 +41,10 @@ func (h *Heartbeat) call(url string, expected int) error {
 	return nil
 }
 
-func (h *Heartbeat) send(APIUrl string) {
+func (h *Heartbeat) send(APIUrl string) error {
 	req, err := http.NewRequest("POST", APIUrl, nil)
 	if err != nil {
-		log.Printf("Error creating request: %s", err)
-		return
+		return errors.New(fmt.Sprintf("Error creating request: %s", err))
 	}
 
 	apiKey := fmt.Sprintf("GenieKey %s", h.APIKey)
@@ -50,8 +52,7 @@ func (h *Heartbeat) send(APIUrl string) {
 
 	res, err := h.Client.Do(req)
 	if err != nil {
-		log.Printf("Error sending the Heartbeat request: %s", err)
-		return
+		return errors.New(fmt.Sprintf("Error sending the Heartbeat request: %s", err))
 	}
 
 	defer func() {
@@ -62,9 +63,11 @@ func (h *Heartbeat) send(APIUrl string) {
 	if res.StatusCode != 202 {
 		reply, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			log.Printf("Error reading opsgenie reply body: %s", err)
-			return
+			return errors.New(fmt.Sprintf("Error reading opsgenie reply body: %s", err))
+
 		}
-		log.Println("Opsgenie reply to Heartbeat not successful: " + string(reply))
+		return errors.New("Opsgenie reply to Heartbeat not successful: " + string(reply))
+
 	}
+	return nil
 }
