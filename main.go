@@ -7,13 +7,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lovoo/opsgenie-cardiogram/cardiogram"
+	"github.com/utilitywarehouse/opsgenie-cardiogram/cardiogram"
 
 	"gopkg.in/yaml.v2"
 )
 
 type config struct {
-	URL      string        `yaml:"url"`
 	APIKey   string        `yaml:"api_key"`
 	Timeout  time.Duration `yaml:"timeout"`
 	Interval time.Duration `yaml:"interval"`
@@ -51,7 +50,6 @@ func main() {
 		Client: &http.Client{
 			Timeout: c.Timeout,
 		},
-		URL:    c.URL,
 		APIKey: c.APIKey,
 	}
 

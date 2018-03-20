@@ -17,8 +17,6 @@ docker run -d --name opsgenie-cardiogram -v /dir/to/config:/data lovoo/opsgenie-
 ## Configuration
 
 ```
-# default heartbeat api
-url: https://api.opsgenie.com/v1/json/heartbeat/send
 # generated api key from opsgenie integration
 api_key: "oases-nairy-uncini-jawed-guglet-areca-azured"
 # timeout for http client

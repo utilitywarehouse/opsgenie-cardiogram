@@ -1,9 +1,10 @@
 package cardiogram
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -13,14 +14,17 @@ import (
 type Heartbeat struct {
 	Client  *http.Client
 	Timeout time.Duration
-	URL     string
 	APIKey  string
 }
 
 // Check scrapes the targets and send the heartbeats to Opsgenie.
 func (h *Heartbeat) Check(url string, expected int, name string) {
 	if h.call(url, expected) == nil {
-		h.send(name)
+		APIUrl := fmt.Sprintf("https://api.opsgenie.com/v2/heartbeats/%s/ping", name)
+		err := h.send(APIUrl)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 
@@ -37,35 +41,33 @@ func (h *Heartbeat) call(url string, expected int) error {
 	return nil
 }
 
-func (h *Heartbeat) send(name string) {
-	req := struct {
-		APIKey string `json:"apiKey"`
-		Name   string `json:"name"`
-	}{h.APIKey, name}
-
-	buf, err := json.Marshal(req)
+func (h *Heartbeat) send(APIUrl string) error {
+	req, err := http.NewRequest("POST", APIUrl, nil)
 	if err != nil {
-		log.Println("Cannot marshal request json")
-		return
+		return fmt.Errorf("Error creating request: %s", err)
 	}
 
-	res, err := h.Client.Post(h.URL, "application/json", bytes.NewReader(buf))
+	apiKey := fmt.Sprintf("GenieKey %s", h.APIKey)
+	req.Header.Set("Authorization", apiKey)
+
+	res, err := h.Client.Do(req)
 	if err != nil {
-		log.Printf("Error while sending Heartbeat for '%s': %s", name, err)
-	}
-	defer res.Body.Close()
-
-	resp := struct {
-		Status string
-		Code   int
-	}{}
-
-	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
-		log.Println("Cannot read response from Opsgenie")
-		return
+		return fmt.Errorf("Error sending the Heartbeat request: %s", err)
 	}
 
-	if resp.Code != 200 || resp.Status != "successful" {
-		log.Println("Sending Heartbeat was not successful")
+	defer func() {
+		io.Copy(ioutil.Discard, res.Body)
+		res.Body.Close()
+	}()
+
+	if res.StatusCode != 202 {
+		reply, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return fmt.Errorf("Error reading opsgenie reply body: %s", err)
+
+		}
+		return fmt.Errorf("Opsgenie reply to Heartbeat not successful: %s", string(reply))
+
 	}
+	return nil
 }
