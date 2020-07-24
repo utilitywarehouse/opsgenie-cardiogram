@@ -1,6 +1,6 @@
 # Opsgenie Cardiogram
 
-[![Build Status](https://travis-ci.org/lovoo/opsgenie-cardiogram.svg?branch=master)](https://travis-ci.org/lovoo/opsgenie-cardiogram) [![Docker Automated Build](https://img.shields.io/docker/automated/lovoo/opsgenie-cardiogram.svg)](https://hub.docker.com/r/lovoo/opsgenie-cardiogram/)
+[![Docker Repository on Quay](https://quay.io/repository/utilitywarehouse/opsgenie-cardiogram/status "Docker Repository on Quay")](https://quay.io/repository/utilitywarehouse/opsgenie-cardiogram)
 
 **Simple Heartbeat Reporter for Opsgenie**
 
@@ -11,7 +11,7 @@
 ./opsgenie-cardiogram -config /path/to/config.yml
 
 # Docker (default config.yml expected in /data)
-docker run -d --name opsgenie-cardiogram -v /dir/to/config:/data lovoo/opsgenie-cardiogram:latest
+docker run -d --name opsgenie-cardiogram -v /dir/to/config:/data utilitywarehouse/opsgenie-cardiogram:latest
 ```
 
 ## Configuration
