@@ -1,11 +1,15 @@
-FROM alpine:latest
+FROM golang:1.14-alpine AS build
+WORKDIR /go/src/github.com/utilitywarehouse/opsgenie-cardiogram
+COPY . /go/src/github.com/utilitywarehouse/opsgenie-cardiogram
+ENV CGO_ENABLED 0
+RUN apk --no-cache add git \
+  && go get -t ./... \
+  && go test -v \
+  && go build -o /opsgenie-cardiogram .
 
-ENV GOPATH /go
-ENV APPPATH $GOPATH/src/github.com/utilitywarehouse/opsgenie-cardiogram
-COPY . $APPPATH
-RUN apk add --update -t build-deps go git mercurial libc-dev gcc libgcc \
-    && cd $APPPATH && go get -d && go build -o /opsgenie-cardiogram \
-    && apk del --purge build-deps && apk add ca-certificates && rm -rf $GOPATH
+FROM alpine:3.12
+RUN apk add --no-cache ca-certificates
+COPY --from=build /opsgenie-cardiogram /opsgenie-cardiogram
 
 VOLUME /data
 
